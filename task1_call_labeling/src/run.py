@@ -2,8 +2,9 @@
 
     python src/run.py --input data/inputs_50.jsonl --output outputs/predictions.jsonl
 
-Reads GROQ_API_KEY from the environment (or task1_call_labeling/.env).
-Writes: <output>            one 5-key prediction per input record, in input order
+All settings come from config.toml (model, temperature, retries, timeouts, guardrails, prompts folder, ...);
+command-line flags override the file. The API key is read from GROQ_API_KEY (environment or task1_call_labeling/.env).
+Writes: <output>              one 5-key prediction per input record, in input order
         <output>.trace.jsonl  extracted evidence, status, retries and token usage per record
         <output>.summary.json model, settings, counts, tokens, runtime
 """
@@ -23,38 +24,51 @@ try:
 except ImportError:
     pass
 
-from io_models import read_jsonl, fallback_output   # noqa: E402
-from llm_client import GroqExtractor                # noqa: E402
-from pipeline import process_record                 # noqa: E402
+from config import extractor_kwargs, load_config, prompts_dir   # noqa: E402
+from io_models import read_jsonl, fallback_output               # noqa: E402
+from llm_client import GroqExtractor                            # noqa: E402
+from pipeline import process_record                             # noqa: E402
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", required=True, help="input JSONL: transcript_id, call_started_at, timezone, transcript")
     ap.add_argument("--output", required=True, help="prediction JSONL to write")
-    ap.add_argument("--model", default="qwen/qwen3.8-27b", help="exact Groq model id")
-    ap.add_argument("--reasoning-effort", default="none",
-                    help="reasoning_effort sent to the model (qwen: none|default; gpt-oss: low|medium|high); '' = not sent")
-    ap.add_argument("--temperature", type=float, default=0.0)
-    ap.add_argument("--max-tokens", type=int, default=4096, help="includes hidden reasoning tokens")
-    ap.add_argument("--timeout", type=float, default=90.0, help="seconds per API call")
-    ap.add_argument("--max-attempts", type=int, default=4, help="attempts per record (API errors and bad JSON)")
-    ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--config", default=None, help="config file (default: config.toml, or $LABELING_CONFIG)")
+    # Overrides of config.toml (None = use the config value)
+    ap.add_argument("--model", default=None, help="[llm] model")
+    ap.add_argument("--reasoning-effort", default=None, help="[llm] reasoning_effort ('' = not sent)")
+    ap.add_argument("--temperature", type=float, default=None, help="[llm] temperature")
+    ap.add_argument("--max-tokens", type=int, default=None, help="[llm] max_tokens")
+    ap.add_argument("--timeout", type=float, default=None, help="[llm] timeout_s (seconds per API call)")
+    ap.add_argument("--seed", type=int, default=None, help="[llm] seed")
+    ap.add_argument("--max-attempts", type=int, default=None, help="[retries] max_attempts")
+    ap.add_argument("--prompts-dir", default=None, help="[prompts] dir")
     ap.add_argument("--offset", type=int, default=0, help="skip the first N records (debugging)")
     ap.add_argument("--limit", type=int, default=None, help="process at most N records (debugging)")
-    ap.add_argument("--prompts-dir", default=str(ROOT / "prompts"))
     args = ap.parse_args()
 
     if not os.environ.get("GROQ_API_KEY", "").strip():
         sys.exit("GROQ_API_KEY is not set (export it, or put it in task1_call_labeling/.env)")
 
-    pdir = Path(args.prompts_dir)
+    try:
+        cfg = load_config(args.config)
+    except (ValueError, FileNotFoundError) as e:
+        sys.exit(str(e))
+    for flag, section, key in [("temperature", "llm", "temperature"), ("max_tokens", "llm", "max_tokens"),
+                               ("timeout", "llm", "timeout_s"), ("seed", "llm", "seed"),
+                               ("max_attempts", "retries", "max_attempts")]:
+        if getattr(args, flag) is not None:
+            cfg[section][key] = getattr(args, flag)
+    if args.prompts_dir is not None:
+        cfg["prompts"]["dir"] = args.prompts_dir
+
+    kwargs = extractor_kwargs(cfg, model=args.model, reasoning_effort=args.reasoning_effort)
+    pdir = prompts_dir(cfg)
     extractor = GroqExtractor(
-        model=args.model,
         system_prompt=(pdir / "system.md").read_text(encoding="utf-8"),
         user_template=(pdir / "user.md").read_text(encoding="utf-8"),
-        temperature=args.temperature, max_tokens=args.max_tokens, timeout=args.timeout,
-        max_attempts=args.max_attempts, seed=args.seed, reasoning_effort=args.reasoning_effort or None,
+        **kwargs,
     )
 
     out_path = Path(args.output)
@@ -74,7 +88,7 @@ def main():
             if rec is None:
                 out, trace = fallback_output(f"LINE_{line_no}"), {"status": "invalid_input", "notes": [err]}
             else:
-                out, trace = process_record(rec, extractor)
+                out, trace = process_record(rec, extractor, cfg["guardrails"])
 
             if out["transcript_id"] in seen:
                 print(f"warning: duplicate transcript_id {out['transcript_id']}", file=sys.stderr)
@@ -96,13 +110,16 @@ def main():
                   f"/ {out['lead_quality']} / {out['next_call_at']}  ({trace['status']})", flush=True)
 
     summary = {
-        "model": args.model, "reasoning_effort": args.reasoning_effort, "temperature": args.temperature,
-        "max_tokens": args.max_tokens, "timeout_s": args.timeout, "max_attempts": args.max_attempts,
-        "seed": args.seed, "reasoning_effort_used": extractor.reasoning_effort, "json_mode_used": extractor.json_mode,
+        "model": kwargs["model"], "reasoning_effort": kwargs["reasoning_effort"] or "",
+        "temperature": kwargs["temperature"], "max_tokens": kwargs["max_tokens"], "timeout_s": kwargs["timeout"],
+        "max_attempts": kwargs["max_attempts"], "seed": kwargs["seed"],
+        "reasoning_effort_used": extractor.reasoning_effort, "json_mode_used": extractor.json_mode,
+        "config_file": str(Path(args.config or os.environ.get("LABELING_CONFIG") or "config.toml")),
+        "settings": {"llm": cfg["llm"], "retries": cfg["retries"], "guardrails": cfg["guardrails"]},
         "runtime_s": round(time.time() - t0, 1), **stats,
     }
     Path(str(out_path) + ".summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-    print("\nsummary:", json.dumps(summary))
+    print("\nsummary:", json.dumps({k: v for k, v in summary.items() if k != "settings"}))
 
 
 if __name__ == "__main__":

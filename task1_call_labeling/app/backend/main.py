@@ -36,21 +36,19 @@ try:
 except ImportError:
     pass
 
-from llm_client import GroqExtractor    # noqa: E402
-from pipeline import process_record     # noqa: E402
+from config import extractor_kwargs, load_config, prompts_dir   # noqa: E402
+from llm_client import GroqExtractor                            # noqa: E402
+from pipeline import process_record                             # noqa: E402
 
+CFG = load_config()                                   # config.toml (or $LABELING_CONFIG)
 DATA_DIRS = [REPO_ROOT / "data", ROOT / "data"]       # CSV files are listed from these folders
 UPLOAD_DIR = ROOT / "data"
 REQUIRED_COLUMNS = ("transcript_id", "call_started_at", "transcript")
 INPUT_FIELDS = ("transcript_id", "call_started_at", "timezone", "transcript")
 GOLD_COLUMNS = ("disposition", "sub_disposition", "lead_quality", "next_call_at")
-MAX_UPLOAD_BYTES = 20 * 1024 * 1024
-MODEL_PRESETS = {                                     # model id -> reasoning_effort preset
-    "qwen/qwen3.8-27b": "none",
-    "openai/gpt-oss-120b": "low",
-    "openai/gpt-oss-20b": "low",
-}
-DEFAULT_MODEL = os.environ.get("DEFAULT_MODEL", "qwen/qwen3.8-27b")
+MAX_UPLOAD_BYTES = int(CFG["app"]["max_upload_mb"] * 1024 * 1024)
+MODEL_PRESETS = dict(CFG["app"]["models"])            # model id -> reasoning_effort ("" = not sent)
+DEFAULT_MODEL = os.environ.get("DEFAULT_MODEL") or CFG["app"]["default_model"]
 
 app = FastAPI(title="Call labeling pipeline", version="1.0")
 
@@ -145,12 +143,11 @@ def get_extractor(model: str):
         raise HTTPException(503, "GROQ_API_KEY is not configured on the server.")
     with _LOCK:
         if model not in _EXTRACTORS:
-            pdir = ROOT / "prompts"
+            pdir = prompts_dir(CFG)
             _EXTRACTORS[model] = GroqExtractor(
-                model=model,
                 system_prompt=(pdir / "system.md").read_text(encoding="utf-8"),
                 user_template=(pdir / "user.md").read_text(encoding="utf-8"),
-                reasoning_effort=MODEL_PRESETS[model] or None,
+                **extractor_kwargs(CFG, model=model, reasoning_effort=MODEL_PRESETS[model]),
             )
         return _EXTRACTORS[model]
 
@@ -214,7 +211,7 @@ def predict(req: PredictRequest):
     extractor.exhausted = False        # a long-lived server must retry: quotas reset (one quick 429 if still spent)
     payload = {k: row[k] for k in INPUT_FIELDS}          # ONLY the four input fields reach the workflow
     t0 = time.time()
-    out, trace = process_record(payload, extractor)
+    out, trace = process_record(payload, extractor, CFG["guardrails"])
     return {
         "prediction": out, "status": trace["status"], "notes": trace.get("notes", []), "model": model,
         "extraction": trace.get("extraction", {}), "attempts": trace.get("attempts"),

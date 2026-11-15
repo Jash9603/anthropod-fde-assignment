@@ -1,0 +1,45 @@
+# Configuration for the call-labeling pipeline (batch runner src/run.py and web app run_app.py).
+#
+# Precedence:  built-in defaults  <  this file  <  command-line flags (e.g. --model, --temperature).
+# Use another file with:  python src/run.py --config my_config.toml ...   (or set LABELING_CONFIG).
+# Secrets are NOT stored here: set GROQ_API_KEY in the environment or in a local .env file.
+# Unknown keys or wrong value types stop the program with a clear error.
+
+[llm]
+model = "qwen/qwen3.8-27b"          # exact Groq model id
+reasoning_effort = "none"           # sent to the model; "" = not sent. qwen: none|default   gpt-oss: low|medium|high
+temperature = 0.0
+max_tokens = 4096                   # includes hidden reasoning tokens
+seed = 7
+json_mode = true                    # response_format = json_object
+timeout_s = 90.0                    # seconds per API call
+min_expected_keys = 8               # a reply with fewer expected top-level keys is treated as malformed and retried
+
+[retries]
+max_attempts = 4                    # per record, for API errors and malformed replies
+max_rate_limit_waits = 12           # 429 waits per record; they do not use an attempt
+quota_wait_threshold_s = 120.0      # a 429 that asks for a longer wait means the quota is spent: fail fast
+max_shrinks = 3                     # times a "413 request too large" is shortened and resent
+shrink_factor = 0.7                 # each shortening keeps about this fraction of the transcript
+shrink_head_chars = 3000            # start of the transcript always kept when shortening (the end is kept too)
+
+[guardrails]
+max_transcript_chars = 40000        # longer transcripts are truncated (start and end kept)
+head_chars = 4000                   # start kept when truncating
+min_alpha_chars = 15                # fewer letters than this: LLM skipped, record is Unable to Assess
+
+[prompts]
+dir = "prompts"                     # folder with system.md and user.md (relative to this folder, or absolute)
+
+[app]
+default_model = "qwen/qwen3.8-27b"
+host = "127.0.0.1"
+backend_port = 8000
+frontend_port = 8501
+max_upload_mb = 20
+
+# Models offered in the web app: model id = reasoning_effort sent for that model ("" = not sent).
+[app.models]
+"qwen/qwen3.8-27b" = "none"
+"openai/gpt-oss-120b" = "low"
+"openai/gpt-oss-20b" = "low"

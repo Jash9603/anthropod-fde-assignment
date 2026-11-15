@@ -29,5 +29,6 @@ task2_gender_detection/data/
 # generated experiment outputs (the submitted predictions_50.jsonl + its summary are kept)
 task1_call_labeling/outputs/*
 !task1_call_labeling/outputs/.gitkeep
+!task1_call_labeling/outputs/README.md
 !task1_call_labeling/outputs/predictions_50.jsonl
 !task1_call_labeling/outputs/predictions_50.jsonl.summary.json

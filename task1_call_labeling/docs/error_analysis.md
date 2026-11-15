@@ -1,5 +1,18 @@
 # Task 1 - Error analysis and iteration log
 
+## Summary
+- **System:** Groq `qwen/qwen3.8-27b` extracts typed evidence from each transcript; deterministic Python turns it into the
+  four labels.
+- **Result on the 50 calls:** 63.0 / 70 label points, 74% whole-record exact match (disposition 96%, sub-disposition 80%,
+  lead quality 92%, next call 94%). On the 20 records never used to develop the prompt: 75% exact, 60.0 / 70.
+- **Model choice:** Qwen beat gpt-oss-120b on all 50 calls (63.0 vs 58.9) and was deterministic across runs.
+- **Main errors:** sub-disposition judgement calls between several blockers (8 records), a tentative plan with a
+  "callback to confirm" read as a booking (2), a spurious refusal (1), an event-qualified date (1), one Low/Medium
+  lead-quality call (1).
+- **Cost:** about 297k prompt + 25k completion tokens for 50 calls, 467 s on 5 keys; a dollar cost is not estimated (see
+  below).
+- **Expectation for the private set:** about 55-62 / 70.
+
 ## System under test
 Groq **`qwen/qwen3.8-27b`**, `temperature=0`, `seed=7`, `reasoning_effort=none`, JSON mode, `max_tokens=4096`.
 One LLM call per transcript extracts typed evidence (pydantic schema); deterministic Python applies the policy

@@ -41,8 +41,8 @@ def shrink_transcript(text: str, factor: float = 0.7, head: int = 3000) -> str:
     return text[:head] + "\n[... middle of transcript omitted ...]\n" + text[-(target - head):]
 
 
-def looks_complete(obj: dict) -> bool:
-    return sum(k in obj for k in EXPECTED_KEYS) >= MIN_KEYS_PRESENT
+def looks_complete(obj: dict, minimum: int = MIN_KEYS_PRESENT) -> bool:
+    return sum(k in obj for k in EXPECTED_KEYS) >= minimum
 
 
 @dataclass
@@ -62,15 +62,18 @@ class LLMResult:
 class GroqExtractor:
     def __init__(self, model, system_prompt, user_template, temperature=0.0, max_tokens=4096,
                  timeout=90.0, max_attempts=4, seed=7, client=None, reasoning_effort=None, max_rate_limit_waits=12,
-                 max_shrinks=3):
+                 max_shrinks=3, json_mode=True, quota_wait_threshold_s=120.0, shrink_factor=0.7,
+                 shrink_head_chars=3000, min_expected_keys=MIN_KEYS_PRESENT):
         self.max_rate_limit_waits = max_rate_limit_waits
         self.max_shrinks = max_shrinks       # how many times an oversized request may be shortened and resent
-        self.max_rate_limit_wait = 120.0     # longer waits than this (seconds) mean the quota is spent
+        self.shrink_factor, self.shrink_head_chars = shrink_factor, shrink_head_chars
+        self.max_rate_limit_wait = quota_wait_threshold_s   # longer waits (seconds) mean the quota is spent
+        self.min_expected_keys = min_expected_keys          # replies with fewer expected keys are retried
         self.exhausted = False               # set when the key's daily/long rate limit is hit
         self.reasoning_effort = reasoning_effort     # "low" | "medium" | "high" for reasoning models
         self.model, self.system_prompt, self.user_template = model, system_prompt, user_template
         self.temperature, self.max_tokens, self.max_attempts, self.seed = temperature, max_tokens, max_attempts, seed
-        self.json_mode = True
+        self.json_mode = json_mode
         if client is None:
             from groq import Groq                      # imported lazily so unit tests need no network/package
             client = Groq(timeout=timeout, max_retries=0)   # we do our own retries
@@ -147,7 +150,7 @@ class GroqExtractor:
                         and res.shrinks < self.max_shrinks:
                     # request exceeds the model's per-request token limit: shorten the transcript (the end, which holds
                     # the final evidence, is kept) and resend; this does not use an attempt
-                    shorter = shrink_transcript(current, 0.7)
+                    shorter = shrink_transcript(current, self.shrink_factor, self.shrink_head_chars)
                     if len(shorter) < len(current):
                         res.shrinks += 1
                         current = shorter
@@ -179,7 +182,7 @@ class GroqExtractor:
             res.raw = text
             try:
                 obj = parse_json_object(text)
-                if not looks_complete(obj):
+                if not looks_complete(obj, self.min_expected_keys):
                     raise ValueError("JSON missing most expected keys")
                 res.extraction, res.error = obj, None
                 break

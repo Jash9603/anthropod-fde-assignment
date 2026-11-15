@@ -37,7 +37,7 @@ class FakeExtractor:
                          prompt_tokens=11, completion_tokens=7)
 
 
-@unittest.skipUnless(HAVE_DEPS, "fastapi UI dependencies not installed (pip install -r requirements-ui.txt)")
+@unittest.skipUnless(HAVE_DEPS, "fastapi web-app dependencies not installed (pip install -r requirements.txt)")
 class TestBackend(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

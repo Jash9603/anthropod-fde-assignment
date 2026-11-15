@@ -16,22 +16,28 @@ HEAD_CHARS = 4000          # when truncating keep the start and, above all, the 
 MIN_ALPHA_CHARS = 15       # fewer letters than this -> nothing to assess, skip the LLM call
 
 
-def sanitize_transcript(text: str, max_chars: int = MAX_CHARS):
+def sanitize_transcript(text: str, max_chars: int = MAX_CHARS, head_chars: int = HEAD_CHARS):
     """Remove control chars, neutralise tag break-outs, bound the length. Returns (text, truncated)."""
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
     text = re.sub(r"</?\s*transcript\s*>", "[tag removed]", text, flags=re.I)
     truncated = len(text) > max_chars
     if truncated:
-        text = text[:HEAD_CHARS] + "\n[... middle of transcript omitted ...]\n" + text[-(max_chars - HEAD_CHARS):]
+        head_chars = min(head_chars, max_chars // 2)
+        text = text[:head_chars] + "\n[... middle of transcript omitted ...]\n" + text[-(max_chars - head_chars):]
     return text.strip(), truncated
 
 
-def has_content(text: str) -> bool:
-    return len(re.findall(r"[^\W\d_]", text)) >= MIN_ALPHA_CHARS
+def has_content(text: str, min_alpha_chars: int = MIN_ALPHA_CHARS) -> bool:
+    return len(re.findall(r"[^\W\d_]", text)) >= min_alpha_chars
 
 
-def process_record(raw_record, extractor):
+def process_record(raw_record, extractor, guardrails=None):
+    """`guardrails` (optional dict from config.toml [guardrails]): max_transcript_chars, head_chars, min_alpha_chars."""
+    g = guardrails or {}
+    max_chars = g.get("max_transcript_chars", MAX_CHARS)
+    head_chars = g.get("head_chars", HEAD_CHARS)
+    min_alpha = g.get("min_alpha_chars", MIN_ALPHA_CHARS)
     trace = {"transcript_id": None, "status": "ok", "notes": []}
     rid = raw_record.get("transcript_id") if isinstance(raw_record, dict) else None
     trace["transcript_id"] = None if rid is None else str(rid)
@@ -43,13 +49,13 @@ def process_record(raw_record, extractor):
         trace.update(status="invalid_input", notes=[str(e)[:300]])
         return fallback_output(rid if rid not in (None, "") else "UNKNOWN"), trace
 
-    text, truncated = sanitize_transcript(rec.transcript)
+    text, truncated = sanitize_transcript(rec.transcript, max_chars, head_chars)
     if truncated:
         trace["notes"].append("transcript truncated")
 
     # 2. extraction (skip LLM when there is nothing to read)
     extraction, llm = None, None
-    if not has_content(text):
+    if not has_content(text, min_alpha):
         trace["notes"].append("empty/near-empty transcript: LLM skipped")
     else:
         now = parse_call_time(rec.call_started_at)
