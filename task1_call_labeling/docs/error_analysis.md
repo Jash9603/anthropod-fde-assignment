@@ -34,8 +34,31 @@ exact match 22, 21 and 18 of 30. The two `low` runs differ by one record, and in
 even at temperature 0 (e.g. AVT-015: Information Requested / Information Requested / Cost Concern). Differences of
 one or two records between prompt versions are therefore not meaningful.
 `reasoning_effort=medium` was worse (60% vs 70-73%) and used about 3x the output tokens, so `low` was kept.
-Other candidate models (`openai/gpt-oss-20b`, `qwen/qwen3.8-27b`) were available but were **not** benchmarked; this is a
-limitation of the study, not a finding.
+Other models were compared on a small sample, see the next section.
+
+## Model comparison (10 records, three models)
+Same prompt, same code, records 31-40 (`--offset 30 --limit 10`), one Groq key, temperature 0, seed 7.
+**Only 10 records were used because of the free-tier quota; running every model on all 50 calls would exhaust the daily
+token limits.** One record is 10 percentage points, so treat this as indicative, not statistically conclusive.
+
+| Model | Disposition | Sub-disp. | Lead quality | Next call | Exact match | Label score | Tokens in / out | Runtime |
+|---|---|---|---|---|---|---|---|---|
+| `openai/gpt-oss-120b` (reasoning low) | 80% | 40% | 80% | 60% | 3/10 | 44.0 / 70 | 57,447 / 7,196 | 370 s |
+| `openai/gpt-oss-20b` (reasoning low) | 80% | 40% | 60% | 70% | 3/10 | 43.0 / 70 | 57,447 / 5,238 | 415 s |
+| `qwen/qwen3.8-27b` (reasoning none) | **100%** | **80%** | **100%** | **100%** | **8/10** | **66.0 / 70** | 59,581 / 5,090 | 454 s |
+
+- Qwen got both bookings (AVT-037, AVT-039) that both gpt-oss models missed, and made only two sub-disposition
+  errors (AVT-032 Vague Deferral vs Cost Concern, AVT-038 Current Treatment vs Treatment Concern), both judgement calls.
+- The prompt was iterated on gpt-oss-120b errors (including some of these records), never on Qwen output, so the
+  comparison if anything favours gpt-oss. A 5-record exact-match gap is larger than the run-to-run noise measured earlier
+  (about 1-2 records out of 30).
+- Runtime is dominated by Groq's per-minute token limit on a single key (9-11 rate-limit waits per run), so it says
+  little about model speed. Token usage is similar across models. Cost is not estimated here because current Groq
+  prices for these models were not verified; apply the published prices to the token counts above.
+- Settings actually used (from the run summaries): gpt-oss models `reasoning_effort=low`; Qwen `reasoning_effort=none`;
+  JSON mode on for all three.
+- **The submitted predictions (`outputs/predictions_50.jsonl`) were produced with `gpt-oss-120b`**, before this
+  comparison. The comparison suggests Qwen would score higher; confirming that needs a full 50-record Qwen run.
 
 ## Main failure patterns (v4 errors)
 
@@ -88,4 +111,4 @@ Rejected: more reasoning effort (worse), further prompt tuning against single ca
 - Daily token quota: a 50-call run uses about 320k tokens, which can exceed a free-tier single-key daily limit.
   The runner then marks the key exhausted and returns safe fallback records (`llm_failed` in the trace) instead of hanging.
 - The prompt is about 3.5k tokens; trimming it would reduce cost and quota risk.
-- Only one model was fully evaluated.
+- Only `gpt-oss-120b` was evaluated on all 50 calls; the other two models were compared on 10 records.

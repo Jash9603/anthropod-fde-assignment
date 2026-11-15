@@ -64,6 +64,18 @@ Evaluate: `python scripts\evaluate.py --gold data\gold_50.jsonl --pred <predicti
 
 Tests: `python -m unittest discover -s tests -v`
 
+## Streamlit demo (optional)
+
+```powershell
+pip install -r requirements-ui.txt
+streamlit run app\streamlit_app.py
+```
+
+Choose a transcript id from `data/inputs_50.jsonl`, press **Run pipeline**, and the app shows the four predicted labels
+(disposition, sub-disposition, lead quality, next call time), the extracted evidence and run details (tokens, latency).
+It calls the same `pipeline.process_record` as the CLI and feeds it only the four input fields; gold labels (if
+`data/gold_50.jsonl` exists) are shown for comparison afterwards and are never given to the pipeline.
+
 ## Model and generation settings
 
 - Model: `openai/gpt-oss-120b` (Groq), `temperature=0`, `seed=7`, `max_tokens=4096`

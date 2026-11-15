@@ -97,7 +97,8 @@ def main():
     summary = {
         "model": args.model, "reasoning_effort": args.reasoning_effort, "temperature": args.temperature,
         "max_tokens": args.max_tokens, "timeout_s": args.timeout, "max_attempts": args.max_attempts,
-        "seed": args.seed, "runtime_s": round(time.time() - t0, 1), **stats,
+        "seed": args.seed, "reasoning_effort_used": extractor.reasoning_effort, "json_mode_used": extractor.json_mode,
+        "runtime_s": round(time.time() - t0, 1), **stats,
     }
     Path(str(out_path) + ".summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print("\nsummary:", json.dumps(summary))
