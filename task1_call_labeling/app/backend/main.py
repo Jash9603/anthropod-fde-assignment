@@ -36,7 +36,7 @@ try:
 except ImportError:
     pass
 
-from config import extractor_kwargs, load_config, prompts_dir   # noqa: E402
+from config import clean_api_key, extractor_kwargs, load_config, prompts_dir   # noqa: E402
 from llm_client import GroqExtractor                            # noqa: E402
 from pipeline import process_record                             # noqa: E402
 
@@ -139,8 +139,8 @@ def _gold(row):
 def get_extractor(model: str):
     if model not in MODEL_PRESETS:
         raise HTTPException(400, f"Unsupported model. Choose one of: {', '.join(MODEL_PRESETS)}")
-    if not os.environ.get("GROQ_API_KEY", "").strip():
-        raise HTTPException(503, "GROQ_API_KEY is not configured on the server.")
+    if not clean_api_key(os.environ.get("GROQ_API_KEY")):
+        raise HTTPException(503, "GROQ_API_KEY is not configured on the server (set it in .env).")
     with _LOCK:
         if model not in _EXTRACTORS:
             pdir = prompts_dir(CFG)
@@ -155,7 +155,7 @@ def get_extractor(model: str):
 # ---- API ---------------------------------------------------------------------------------------------------------
 @app.get("/health")
 def health():
-    return {"status": "ok", "api_key_configured": bool(os.environ.get("GROQ_API_KEY", "").strip()),
+    return {"status": "ok", "api_key_configured": bool(clean_api_key(os.environ.get("GROQ_API_KEY"))),
             "default_model": DEFAULT_MODEL}
 
 

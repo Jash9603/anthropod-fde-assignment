@@ -78,6 +78,14 @@ class TestLoadConfig(unittest.TestCase):
         self.assertEqual(prompts_dir(cfg), ROOT / "other")
 
 
+class TestApiKey(unittest.TestCase):
+    def test_placeholder_and_blank_keys_count_as_missing(self):
+        from config import clean_api_key
+        for bad in (None, "", "   ", "your_groq_api_key_here", "Your_Key"):
+            self.assertEqual(clean_api_key(bad), "", bad)
+        self.assertEqual(clean_api_key(" gsk_abc123 "), "gsk_abc123")
+
+
 class TestExtractorKwargs(unittest.TestCase):
     def test_every_kwarg_is_a_real_client_parameter(self):
         # drift guard: a config key renamed on one side only would fail here

@@ -58,7 +58,8 @@ except RuntimeError as e:
 # ---- sidebar ----------------------------------------------------------------------------------------------
 st.sidebar.header("Data")
 
-with st.sidebar.expander("Upload a CSV"):
+had_files = bool(api("GET", "/files")["files"])
+with st.sidebar.expander("Upload a CSV", expanded=not had_files):         # open by default until data exists
     st.caption("Required columns: transcript_id, call_started_at, transcript (timezone optional). "
                "Gold label columns, if present, are shown for comparison only.")
     up = st.file_uploader("CSV file", type=["csv"], key="uploader")
@@ -74,10 +75,8 @@ with st.sidebar.expander("Upload a CSV"):
 files = api("GET", "/files")["files"]
 if not files:
     st.title("Call labeling dashboard")
-    st.info("No CSV files found. Upload one in the sidebar, or put a CSV (with columns transcript_id, "
-            "call_started_at, transcript) in the `data/` folder and press Refresh.")
-    if st.sidebar.button("Refresh data"):
-        st.rerun()
+    st.info("No data yet. Upload your CSV with the **Upload a CSV** box in the sidebar "
+            "(columns: transcript_id, call_started_at, transcript).")
     st.stop()
 
 ids = [f["id"] for f in files]

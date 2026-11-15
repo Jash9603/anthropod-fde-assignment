@@ -113,6 +113,12 @@ def load_config(path=None) -> dict:
     return cfg
 
 
+def clean_api_key(value) -> str:
+    """The API key, or "" when it is missing or still the placeholder copied from .env.example."""
+    v = (value or "").strip()
+    return "" if not v or v.lower().startswith("your_") else v
+
+
 def prompts_dir(cfg: dict) -> Path:
     d = Path(cfg["prompts"]["dir"])
     return d if d.is_absolute() else ROOT / d

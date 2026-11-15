@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 
-from config import extractor_kwargs, load_config, prompts_dir   # noqa: E402
+from config import clean_api_key, extractor_kwargs, load_config, prompts_dir   # noqa: E402
 from io_models import read_jsonl, fallback_output               # noqa: E402
 from llm_client import GroqExtractor                            # noqa: E402
 from pipeline import process_record                             # noqa: E402
@@ -48,8 +48,8 @@ def main():
     ap.add_argument("--limit", type=int, default=None, help="process at most N records (debugging)")
     args = ap.parse_args()
 
-    if not os.environ.get("GROQ_API_KEY", "").strip():
-        sys.exit("GROQ_API_KEY is not set (export it, or put it in task1_call_labeling/.env)")
+    if not clean_api_key(os.environ.get("GROQ_API_KEY")):
+        sys.exit("GROQ_API_KEY is not set (put it in task1_call_labeling/.env, see .env.example, or export it)")
 
     try:
         cfg = load_config(args.config)
