@@ -1,0 +1,32 @@
+# secrets
+.env
+*.env
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# editor / OS / tooling
+.vscode/
+.idea/
+.claude/
+CLAUDE.md
+.DS_Store
+Thumbs.db
+*.log
+
+# assignment data (hiring-team material: transcripts and gold labels) - regenerate locally, do not publish
+data/*.csv
+task1_call_labeling/data/*.jsonl
+task2_gender_detection/data/
+*.trace.jsonl
+
+# generated experiment outputs (the submitted predictions_50.jsonl + its summary are kept)
+task1_call_labeling/outputs/*
+!task1_call_labeling/outputs/.gitkeep
+!task1_call_labeling/outputs/predictions_50.jsonl
+!task1_call_labeling/outputs/predictions_50.jsonl.summary.json
