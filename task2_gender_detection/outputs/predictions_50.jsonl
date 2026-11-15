@@ -1,0 +1,50 @@
+{"transcript_id": "AVT-001", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 31.0, "reason": "female: score 31 vs 0 from agent_address, agent_relation, self_statement"}
+{"transcript_id": "AVT-002", "gender": "male", "confidence": "high", "male_score": 15.0, "female_score": 0, "reason": "male: score 15 vs 0 from agent_address"}
+{"transcript_id": "AVT-003", "gender": "male", "confidence": "high", "male_score": 7.0, "female_score": 0, "reason": "male: score 7 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-004", "gender": "male", "confidence": "high", "male_score": 12.0, "female_score": 0, "reason": "male: score 12 vs 0 from agent_address"}
+{"transcript_id": "AVT-005", "gender": "male", "confidence": "high", "male_score": 17.0, "female_score": 0, "reason": "male: score 17 vs 0 from agent_address"}
+{"transcript_id": "AVT-006", "gender": "male", "confidence": "high", "male_score": 15.0, "female_score": 0, "reason": "male: score 15 vs 0 from agent_address"}
+{"transcript_id": "AVT-007", "gender": "male", "confidence": "high", "male_score": 12.0, "female_score": 0, "reason": "male: score 12 vs 0 from agent_address, agent_title"}
+{"transcript_id": "AVT-008", "gender": "unknown", "confidence": "none", "male_score": 9.0, "female_score": 5.0, "reason": "conflicting evidence (male 9 vs female 5): most likely different people spoke during the call"}
+{"transcript_id": "AVT-009", "gender": "male", "confidence": "high", "male_score": 14.0, "female_score": 0, "reason": "male: score 14 vs 0 from agent_address"}
+{"transcript_id": "AVT-010", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 21.0, "reason": "female: score 21 vs 0 from agent_address"}
+{"transcript_id": "AVT-011", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 32.0, "reason": "female: score 32 vs 0 from agent_address, agent_relation, self_statement"}
+{"transcript_id": "AVT-012", "gender": "male", "confidence": "high", "male_score": 15.0, "female_score": 0, "reason": "male: score 15 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-013", "gender": "male", "confidence": "high", "male_score": 23.0, "female_score": 0, "reason": "male: score 23 vs 0 from agent_address"}
+{"transcript_id": "AVT-014", "gender": "male", "confidence": "high", "male_score": 10.0, "female_score": 0, "reason": "male: score 10 vs 0 from agent_address"}
+{"transcript_id": "AVT-015", "gender": "male", "confidence": "low", "male_score": 1.0, "female_score": 0, "reason": "male: score 1 vs 0 from agent_address"}
+{"transcript_id": "AVT-016", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 25.0, "reason": "female: score 25 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-017", "gender": "male", "confidence": "high", "male_score": 14.0, "female_score": 0, "reason": "male: score 14 vs 0 from agent_address"}
+{"transcript_id": "AVT-018", "gender": "male", "confidence": "high", "male_score": 8.0, "female_score": 0, "reason": "male: score 8 vs 0 from agent_address"}
+{"transcript_id": "AVT-019", "gender": "male", "confidence": "low", "male_score": 1.0, "female_score": 0, "reason": "male: score 1 vs 0 from agent_address"}
+{"transcript_id": "AVT-020", "gender": "male", "confidence": "high", "male_score": 23.0, "female_score": 0, "reason": "male: score 23 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-021", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 13.0, "reason": "female: score 13 vs 0 from agent_address"}
+{"transcript_id": "AVT-022", "gender": "male", "confidence": "medium", "male_score": 4.0, "female_score": 0, "reason": "male: score 4 vs 0 from agent_address"}
+{"transcript_id": "AVT-023", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 18.0, "reason": "female: score 18 vs 0 from agent_address"}
+{"transcript_id": "AVT-024", "gender": "male", "confidence": "high", "male_score": 11.0, "female_score": 0, "reason": "male: score 11 vs 0 from agent_address"}
+{"transcript_id": "AVT-025", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 20.0, "reason": "female: score 20 vs 0 from agent_address"}
+{"transcript_id": "AVT-026", "gender": "female", "confidence": "medium", "male_score": 0, "female_score": 3.0, "reason": "female: score 3 vs 0 from agent_address"}
+{"transcript_id": "AVT-027", "gender": "male", "confidence": "high", "male_score": 9.0, "female_score": 0, "reason": "male: score 9 vs 0 from agent_address"}
+{"transcript_id": "AVT-028", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 11.0, "reason": "female: score 11 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-029", "gender": "male", "confidence": "medium", "male_score": 3.0, "female_score": 0, "reason": "male: score 3 vs 0 from agent_address"}
+{"transcript_id": "AVT-030", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 7.0, "reason": "female: score 7 vs 0 from agent_address"}
+{"transcript_id": "AVT-031", "gender": "male", "confidence": "high", "male_score": 5.0, "female_score": 0, "reason": "male: score 5 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-032", "gender": "male", "confidence": "medium", "male_score": 4.0, "female_score": 0, "reason": "male: score 4 vs 0 from agent_address, agent_title"}
+{"transcript_id": "AVT-033", "gender": "male", "confidence": "high", "male_score": 5.0, "female_score": 0, "reason": "male: score 5 vs 0 from agent_address, agent_title"}
+{"transcript_id": "AVT-034", "gender": "male", "confidence": "high", "male_score": 9.0, "female_score": 0, "reason": "male: score 9 vs 0 from agent_address, self_statement"}
+{"transcript_id": "AVT-035", "gender": "male", "confidence": "medium", "male_score": 2.0, "female_score": 0, "reason": "male: score 2 vs 0 from agent_address"}
+{"transcript_id": "AVT-036", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 10.0, "reason": "female: score 10 vs 0 from agent_address, agent_relation"}
+{"transcript_id": "AVT-037", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 11.0, "reason": "female: score 11 vs 0 from agent_address, agent_title"}
+{"transcript_id": "AVT-038", "gender": "male", "confidence": "high", "male_score": 6.0, "female_score": 0, "reason": "male: score 6 vs 0 from agent_address"}
+{"transcript_id": "AVT-039", "gender": "unknown", "confidence": "none", "male_score": 0, "female_score": 0, "reason": "no usable evidence (no address term, title or self-description)"}
+{"transcript_id": "AVT-040", "gender": "male", "confidence": "high", "male_score": 18.0, "female_score": 0, "reason": "male: score 18 vs 0 from agent_address"}
+{"transcript_id": "AVT-041", "gender": "male", "confidence": "high", "male_score": 25.0, "female_score": 0, "reason": "male: score 25 vs 0 from agent_address, agent_title"}
+{"transcript_id": "AVT-042", "gender": "male", "confidence": "low", "male_score": 1.0, "female_score": 0, "reason": "male: score 1 vs 0 from agent_address"}
+{"transcript_id": "AVT-043", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 11.0, "reason": "female: score 11 vs 0 from agent_address"}
+{"transcript_id": "AVT-044", "gender": "male", "confidence": "medium", "male_score": 4.0, "female_score": 0, "reason": "male: score 4 vs 0 from agent_address, agent_title"}
+{"transcript_id": "AVT-045", "gender": "male", "confidence": "high", "male_score": 8.0, "female_score": 0, "reason": "male: score 8 vs 0 from agent_address"}
+{"transcript_id": "AVT-046", "gender": "female", "confidence": "high", "male_score": 0, "female_score": 19.0, "reason": "female: score 19 vs 0 from agent_address"}
+{"transcript_id": "AVT-047", "gender": "male", "confidence": "high", "male_score": 12.0, "female_score": 0, "reason": "male: score 12 vs 0 from agent_address"}
+{"transcript_id": "AVT-048", "gender": "male", "confidence": "medium", "male_score": 2.0, "female_score": 0, "reason": "male: score 2 vs 0 from agent_address"}
+{"transcript_id": "AVT-049", "gender": "male", "confidence": "medium", "male_score": 2.0, "female_score": 0, "reason": "male: score 2 vs 0 from agent_title"}
+{"transcript_id": "AVT-050", "gender": "male", "confidence": "high", "male_score": 8.0, "female_score": 0, "reason": "male: score 8 vs 0 from agent_address, agent_title"}

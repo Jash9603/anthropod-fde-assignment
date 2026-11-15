@@ -1,0 +1,28 @@
+# Settings for the rule-based gender detector (standard library only, no ML models).
+# Precedence: built-in defaults < this file < command-line flags. Unknown keys or wrong types stop with an error.
+
+[weights]                       # how much each kind of evidence counts
+agent_address = 1.0             # agent calls the customer "sir" / "ma'am" / "madam"
+agent_title = 2.0               # agent uses "Mr." / "Mrs." / "Miss" / "Ms." before a name
+agent_relation = 2.0            # agent says "your husband" / "your wife"
+self_statement = 3.0            # customer: "my wife", "my husband", "I am X's husband", "I had a C-section"
+
+[decision]
+min_total = 1.0                 # less evidence than this: unknown
+conflict_min_minority = 2.0     # if the weaker side has at least this much evidence ...
+conflict_min_share = 0.25       # ... and at least this share of all evidence: unknown (different people spoke)
+
+[confidence]
+high_min_total = 5.0            # high: at least this much evidence ...
+high_max_minority_share = 0.1   # ... and almost none for the other gender
+medium_min_total = 2.0          # medium: at least this much; anything less is low
+
+[roles]                         # speaker labels can be wrong; roles are checked from what is said
+swap_min_cues = 3               # swap Agent/Customer for the whole call only if the "Customer" lines carry
+swap_min_ratio = 2.0            # at least this many clinic-side cues AND this many times the "Agent" lines' cues
+line_override_min_cues = 2      # re-assign a single line when it has this many cues of the other role
+
+[app]
+host = "127.0.0.1"
+port = 8502                     # dashboard port (Task 1 uses 8501)
+max_upload_mb = 20

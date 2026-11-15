@@ -1,0 +1,2 @@
+# The detector itself uses only the Python standard library; this is for the dashboard.
+streamlit==1.67.0

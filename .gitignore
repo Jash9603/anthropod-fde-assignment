@@ -23,7 +23,12 @@ Thumbs.db
 data/*.csv
 task1_call_labeling/data/*.csv
 task1_call_labeling/data/*.jsonl
-task2_gender_detection/data/
+task2_gender_detection/data/*
+!task2_gender_detection/data/.gitkeep
+# labeling work files quote transcript text; only the final labels file is committed
+task2_gender_detection/labels/evidence.txt
+task2_gender_detection/labels/gold_review.csv
+task2_gender_detection/outputs/*.evidence.jsonl
 *.trace.jsonl
 
 # generated experiment outputs (the submitted predictions_50.jsonl + its summary are kept)
