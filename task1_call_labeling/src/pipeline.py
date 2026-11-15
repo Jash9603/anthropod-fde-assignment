@@ -53,15 +53,21 @@ def process_record(raw_record, extractor):
         trace["notes"].append("empty/near-empty transcript: LLM skipped")
     else:
         now = parse_call_time(rec.call_started_at)
-        llm = extractor.extract(rec.call_started_at, now.strftime("%A"), text)
-        extraction = llm.extraction
-        if llm.events:
-            trace["events"] = llm.events[-6:]     # retries / rate limits, kept even when the record succeeded
-        trace.update(attempts=llm.attempts, rate_limit_waits=llm.rate_limit_waits, latency_s=llm.latency_s,
-                     prompt_tokens=llm.prompt_tokens, completion_tokens=llm.completion_tokens)
-        if extraction is None:
-            trace.update(status="llm_failed")
-            trace["notes"] += llm.events[-3:]
+        try:
+            llm = extractor.extract(rec.call_started_at, now.strftime("%A"), text)
+        except Exception as e:                        # an unexpected client error must never lose the record
+            llm = None
+            trace.update(status="llm_failed", notes=trace["notes"] + [f"extractor error: {type(e).__name__}: {e}"[:300]])
+        if llm is not None:
+            extraction = llm.extraction
+            if llm.events:
+                trace["events"] = llm.events[-6:]     # retries / rate limits, kept even when the record succeeded
+            trace.update(attempts=llm.attempts, rate_limit_waits=llm.rate_limit_waits, shrinks=llm.shrinks,
+                         latency_s=llm.latency_s,
+                         prompt_tokens=llm.prompt_tokens, completion_tokens=llm.completion_tokens)
+            if extraction is None:
+                trace.update(status="llm_failed")
+                trace["notes"] += llm.events[-3:]
 
     clean = normalize_extraction(extraction)          # validates / repairs; never raises
     trace["extraction"] = clean

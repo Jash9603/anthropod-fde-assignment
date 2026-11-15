@@ -32,8 +32,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--input", required=True, help="input JSONL: transcript_id, call_started_at, timezone, transcript")
     ap.add_argument("--output", required=True, help="prediction JSONL to write")
-    ap.add_argument("--model", default="openai/gpt-oss-120b", help="exact Groq model id")
-    ap.add_argument("--reasoning-effort", default="low", help="low|medium|high for reasoning models; '' to disable")
+    ap.add_argument("--model", default="qwen/qwen3.8-27b", help="exact Groq model id")
+    ap.add_argument("--reasoning-effort", default="none",
+                    help="reasoning_effort sent to the model (qwen: none|default; gpt-oss: low|medium|high); '' = not sent")
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--max-tokens", type=int, default=4096, help="includes hidden reasoning tokens")
     ap.add_argument("--timeout", type=float, default=90.0, help="seconds per API call")

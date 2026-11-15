@@ -87,6 +87,15 @@ class TestProcessRecord(unittest.TestCase):
         self.check_valid(out)
         self.assertEqual(trace["status"], "llm_failed")
 
+    def test_extractor_exception_still_gives_valid_record(self):
+        class Boom:
+            def extract(self, *a, **k):
+                raise RuntimeError("unexpected client failure")
+        out, trace = process_record(rec(), Boom())
+        self.check_valid(out)
+        self.assertEqual(trace["status"], "llm_failed")
+        self.assertIn("unexpected client failure", " ".join(trace["notes"]))
+
     def test_empty_transcript_skips_llm(self):
         fx = FakeExtractor({"relevant_discussion": True})
         out, _ = process_record(rec(transcript="  ..  "), fx)
@@ -154,6 +163,23 @@ class TestExtractorRetry(unittest.TestCase):
         self.assertIsNotNone(res.extraction)
         self.assertEqual((res.rate_limit_waits, res.attempts), (5, 1))
         self.assertEqual(sl.call_args_list[0][0][0], 2.5)          # parsed "1.5s" + 1s buffer
+
+    def test_request_too_large_shrinks_transcript_and_retries(self):
+        class TooLarge(Exception):
+            status_code = 413
+        good = json.dumps(Extraction().model_dump())
+        client = _Client([TooLarge("Request too large for model"), good])
+        sp = (ROOT / "prompts" / "system.md").read_text(encoding="utf-8")
+        up = (ROOT / "prompts" / "user.md").read_text(encoding="utf-8")
+        ext = GroqExtractor("m", sp, up, client=client, max_attempts=2)
+        sizes = []
+        orig = client.create
+        client.create = lambda **kw: (sizes.append(len(kw["messages"][1]["content"])), orig(**kw))[1]
+        res = ext.extract(CALL, "Monday", "x" * 12000 + "THE END")
+        self.assertIsNotNone(res.extraction)
+        self.assertEqual((res.shrinks, res.attempts), (1, 1))            # shrinking does not consume an attempt
+        self.assertLess(sizes[1], sizes[0])                              # second request is smaller
+        self.assertTrue(any("shortened" in e for e in res.events))
 
     def test_daily_limit_marks_key_exhausted_without_waiting(self):
         class RateLimitError(Exception):

@@ -21,6 +21,7 @@ Thumbs.db
 
 # assignment data (hiring-team material: transcripts and gold labels) - regenerate locally, do not publish
 data/*.csv
+task1_call_labeling/data/*.csv
 task1_call_labeling/data/*.jsonl
 task2_gender_detection/data/
 *.trace.jsonl

@@ -33,6 +33,14 @@ def parse_json_object(text: str) -> dict:
     return obj
 
 
+def shrink_transcript(text: str, factor: float = 0.7, head: int = 3000) -> str:
+    """Keep the start and (mostly) the end of a transcript, dropping the middle, so it is ~`factor` of its size."""
+    target = max(int(len(text) * factor), head + 1000)
+    if len(text) <= target:
+        return text
+    return text[:head] + "\n[... middle of transcript omitted ...]\n" + text[-(target - head):]
+
+
 def looks_complete(obj: dict) -> bool:
     return sum(k in obj for k in EXPECTED_KEYS) >= MIN_KEYS_PRESENT
 
@@ -47,13 +55,16 @@ class LLMResult:
     completion_tokens: int = 0
     error: Optional[str] = None
     rate_limit_waits: int = 0
+    shrinks: int = 0
     events: list = field(default_factory=list)
 
 
 class GroqExtractor:
     def __init__(self, model, system_prompt, user_template, temperature=0.0, max_tokens=4096,
-                 timeout=90.0, max_attempts=4, seed=7, client=None, reasoning_effort=None, max_rate_limit_waits=12):
+                 timeout=90.0, max_attempts=4, seed=7, client=None, reasoning_effort=None, max_rate_limit_waits=12,
+                 max_shrinks=3):
         self.max_rate_limit_waits = max_rate_limit_waits
+        self.max_shrinks = max_shrinks       # how many times an oversized request may be shortened and resent
         self.max_rate_limit_wait = 120.0     # longer waits than this (seconds) mean the quota is spent
         self.exhausted = False               # set when the key's daily/long rate limit is hit
         self.reasoning_effort = reasoning_effort     # "low" | "medium" | "high" for reasoning models
@@ -105,7 +116,8 @@ class GroqExtractor:
         if self.exhausted:                               # key already spent: fail fast, do not hammer the API
             res.error = "key exhausted (daily/long rate limit)"
             return res
-        messages = self.build_messages(call_started_at, call_weekday, transcript)
+        current = transcript
+        messages = self.build_messages(call_started_at, call_weekday, current)
         t0 = time.time()
         attempt = 0
         while attempt < self.max_attempts:
@@ -130,6 +142,18 @@ class GroqExtractor:
                         res.rate_limit_waits += 1
                         attempt -= 1
                         time.sleep(wait)
+                        continue
+                if (getattr(e, "status_code", None) == 413 or "request too large" in msg.lower()) \
+                        and res.shrinks < self.max_shrinks:
+                    # request exceeds the model's per-request token limit: shorten the transcript (the end, which holds
+                    # the final evidence, is kept) and resend; this does not use an attempt
+                    shorter = shrink_transcript(current, 0.7)
+                    if len(shorter) < len(current):
+                        res.shrinks += 1
+                        current = shorter
+                        messages = self.build_messages(call_started_at, call_weekday, current)
+                        res.events.append(f"request too large: transcript shortened to {len(current)} chars")
+                        attempt -= 1
                         continue
                 if name == "BadRequestError" and "json_validate_failed" not in msg:
                     # unsupported option: drop reasoning_effort first, then JSON mode, and retry
