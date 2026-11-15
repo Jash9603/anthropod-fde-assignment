@@ -1,7 +1,6 @@
 """Unit tests on SYNTHETIC transcripts (one rule or trap per test). Run from task2_gender_detection/:
     python -m unittest discover -s tests -v
 """
-import os
 import sys
 import tempfile
 import unittest

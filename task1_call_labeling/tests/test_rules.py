@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from callback_time import parse_call_time, resolve_callback, format_iso  # noqa: E402
 from rules import decide, VALID_PAIRS  # noqa: E402
+from schema import normalize_extraction  # noqa: E402
 
 MON = "2026-11-09T14:00:00+05:30"   # Monday, as in the rules' examples
 
@@ -20,7 +21,9 @@ def spec(**kw):
 
 
 def cb(call, **kw):
-    r = resolve_callback(__import__("schema").normalize_timespec(spec(**kw)), parse_call_time(call))
+    # the callback time goes through the same validation path as real model output
+    t = normalize_extraction({"callback": {"agreed": True, "time": spec(**kw)}})["callback"]["time"]
+    r = resolve_callback(t, parse_call_time(call))
     return format_iso(r) if r else None
 
 

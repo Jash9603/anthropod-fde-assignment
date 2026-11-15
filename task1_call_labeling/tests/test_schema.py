@@ -7,7 +7,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from schema import normalize_extraction, normalize_timespec  # noqa: E402
+from schema import normalize_extraction  # noqa: E402
 from rules import decide  # noqa: E402
 
 CALL = "2026-11-09T14:00:00+05:30"
@@ -40,7 +40,8 @@ class TestSchemaNeverRaises(unittest.TestCase):
         self.assertNotIn("unknown_key", ex)
 
     def test_bad_time_values_fall_back(self):
-        t = normalize_timespec({"date_kind": "someday", "weekday": "funday", "n": "abc", "hour": True})
+        bad = {"date_kind": "someday", "weekday": "funday", "n": "abc", "hour": True}
+        t = normalize_extraction({"callback": {"time": bad}})["callback"]["time"]
         self.assertEqual((t["date_kind"], t["weekday"], t["n"], t["hour"]), ("none", None, None, None))
 
 

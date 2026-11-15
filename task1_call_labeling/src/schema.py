@@ -153,14 +153,7 @@ class Extraction(BaseModel):
         return self
 
 
-# ---- public API (names used by rules.py / tests / runner) ----------------------------
-def normalize_timespec(raw: Any) -> dict:
-    try:
-        return TimeSpec.model_validate(raw if isinstance(raw, dict) else {}).model_dump()
-    except Exception:
-        return TimeSpec().model_dump()
-
-
+# ---- public API (used by the pipeline and the rules) ---------------------------------
 def normalize_extraction(raw: Any) -> dict:
     """Any input -> a complete, valid extraction dict. Never raises."""
     try:
